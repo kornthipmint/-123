@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ห้องทดลองการแปลงทางเรขาคณิต 3 มิติ ม.2</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#0d1830;--ink2:#172a4f;--glass:rgba(255,255,255,.07);--glass2:rgba(255,255,255,.045);--line:rgba(255,255,255,.14);--tx:#eaf1ff;--mu:#9db0d3;--blue:#5ab8ff;--orange:#ff9d57;--mint:#6fe3c1;--rad:18px}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{margin:0;height:100%}
+body{font-family:"IBM Plex Sans Thai",Tahoma,sans-serif;color:var(--tx);background:radial-gradient(900px 600px at 15% 10%,rgba(58,100,170,.35),transparent 60%),radial-gradient(800px 600px at 90% 90%,rgba(31,107,122,.28),transparent 60%),linear-gradient(140deg,var(--ink2),var(--ink));line-height:1.6}
+.app{display:grid;grid-template-columns:minmax(0,1fr) 430px;height:100vh;gap:14px;padding:14px}
+.stage{position:relative;border-radius:24px;overflow:hidden;border:1px solid var(--line);background:radial-gradient(ellipse at 50% 35%,#27447a 0,#14264a 55%,#0d1830 100%);box-shadow:0 24px 60px rgba(0,0,0,.4);min-height:360px}
+.stage canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none}
+.glass{background:var(--glass);border:1px solid var(--line);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-radius:var(--rad)}
+.hud{position:absolute;top:14px;left:14px;max-width:min(560px,calc(100% - 28px));padding:10px 16px;pointer-events:none}
+.hud b{display:block;font-size:1.05rem;font-weight:600}
+.hud span{font-size:.8rem;color:var(--mu)}
+.legend{position:absolute;top:14px;right:14px;padding:8px 12px;display:flex;gap:12px;font-size:.8rem;pointer-events:none}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px}
+.toolbar{position:absolute;left:50%;bottom:14px;transform:translateX(-50%);display:flex;gap:6px;padding:7px;flex-wrap:wrap;justify-content:center;max-width:calc(100% - 20px)}
+.btn{font:inherit;font-weight:500;font-size:.9rem;color:var(--tx);background:rgba(255,255,255,.08);border:1px solid var(--line);border-radius:999px;padding:8px 14px;cursor:pointer;transition:background .2s,border-color .2s}
+.btn:hover{background:rgba(255,255,255,.16)}
+.btn[aria-pressed="true"]{background:rgba(111,227,193,.22);border-color:var(--mint)}
+.btn.primary{background:linear-gradient(135deg,var(--blue),var(--mint));color:#06213a;border-color:transparent;font-weight:600}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--mint);outline-offset:2px}
+#hotspots{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.hot{position:absolute;left:0;top:0;pointer-events:auto;min-width:30px;height:30px;padding:0 8px;border-radius:999px;border:2px solid #fff;font-family:inherit;font-weight:600;font-size:.85rem;color:#06213a;cursor:pointer;box-shadow:0 6px 16px rgba(0,0,0,.4);transition:box-shadow .2s,filter .2s;visibility:hidden}
+.hot:hover{filter:brightness(1.15)}
+.hot.o{background:var(--blue)}.hot.i{background:var(--orange)}.hot.k{background:var(--mint)}
+.hot.on{box-shadow:0 0 0 5px rgba(255,255,255,.35),0 6px 16px rgba(0,0,0,.4)}
+.hot.k::after{content:"";position:absolute;inset:-4px;border-radius:999px;border:2px solid var(--mint);animation:pulse 2.2s ease-out infinite}
+@keyframes pulse{from{transform:scale(.9);opacity:.9}to{transform:scale(1.5);opacity:0}}
+.card{position:absolute;left:14px;bottom:76px;width:min(350px,calc(100% - 28px));padding:16px 18px;border-left:4px solid var(--blue);opacity:0;transform:translateY(16px) scale(.96);pointer-events:none;transition:opacity .28s,transform .28s cubic-bezier(.2,.8,.2,1);background:rgba(18,34,68,.72)}
+.card.show{opacity:1;transform:none;pointer-events:auto}
+.card .in{animation:swap .35s ease}
+@keyframes swap{from{opacity:0;transform:translateX(-10px)}to{opacity:1;transform:none}}
+.card h4{margin:0 28px 8px 0;font-size:1.02rem}
+.card p{margin:6px 0;font-size:.92rem}
+.card .mu,.mu{color:var(--mu)}
+.card .x{position:absolute;top:8px;right:10px;width:28px;height:28px;border-radius:50%;border:0;background:rgba(255,255,255,.1);color:var(--tx);font-size:1rem;cursor:pointer}
+.kv{display:flex;justify-content:space-between;gap:10px;padding:5px 0;border-bottom:1px solid var(--line);font-size:.92rem}
+.kv span{color:var(--mu)}
+#fingerDot{position:absolute;left:0;top:0;width:26px;height:26px;margin:-13px 0 0 -13px;border-radius:50%;border:3px solid #fff;background:#8c6bff;box-shadow:0 0 0 8px rgba(140,107,255,.35);pointer-events:none}
+#fingerDot.pinch{background:var(--mint);box-shadow:0 0 0 12px rgba(111,227,193,.4)}
+.panel{display:flex;flex-direction:column;min-height:0;padding:16px;gap:12px;border-radius:24px;background:rgba(255,255,255,.06)}
+.panel h1{font-size:1.28rem;margin:0;font-weight:600;line-height:1.35}
+.panel .sub{margin:2px 0 0;color:var(--mu);font-size:.88rem}
+.nav{display:flex;gap:4px;padding:4px;border-radius:999px}
+.nav button{flex:1;font:inherit;font-size:.88rem;font-weight:500;color:var(--mu);background:none;border:0;border-radius:999px;padding:8px 6px;cursor:pointer}
+.nav button.on{background:rgba(90,184,255,.22);color:var(--tx);box-shadow:inset 0 0 0 1px var(--blue)}
+.panes{flex:1;overflow-y:auto;min-height:0;padding-right:4px;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.25) transparent}
+.pane{display:none}
+.pane.on{display:block;animation:swap .3s ease}
+.pane h2{font-size:1.05rem;margin:4px 0 10px}
+.pane h3{font-size:.98rem;margin:14px 0 8px}
+.seg{display:flex;gap:6px;margin-bottom:10px}
+.seg button{flex:1;font:inherit;font-size:.86rem;font-weight:500;color:var(--tx);background:var(--glass2);border:1px solid var(--line);border-radius:12px;padding:9px 4px;cursor:pointer;transition:.2s}
+.seg button.on{background:linear-gradient(135deg,rgba(90,184,255,.35),rgba(111,227,193,.3));border-color:var(--mint)}
+.box{background:var(--glass2);border:1px solid var(--line);border-radius:var(--rad);padding:14px;margin:10px 0}
+.fld{margin:12px 0}
+.fld label{display:flex;justify-content:space-between;gap:8px;font-weight:500;margin-bottom:6px}
+.val{color:var(--mint);font-variant-numeric:tabular-nums}
+input[type=number],select,textarea{width:100%;background:rgba(8,18,40,.55);color:var(--tx);border:1px solid var(--line);border-radius:12px;padding:10px 12px;font:inherit}
+select option{background:#14264a}
+input[type=range]{width:100%;accent-color:var(--mint)}
+.formula{font-weight:600;color:var(--mint);font-size:1.05rem;margin-bottom:4px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:8px 0}
+.status{font-size:.88rem;color:var(--mu);margin:8px 0}
+.status[data-s="ok"]{color:var(--mint)}.status[data-s="error"]{color:#ff9c9c}
+#cameraPreview{display:block;width:100%;max-width:260px;aspect-ratio:4/3;object-fit:cover;transform:scaleX(-1);border-radius:12px;background:#0b1428;margin-top:8px}
+.tw{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:.88rem}
+th,td{padding:8px 6px;border-bottom:1px solid var(--line);text-align:center}
+thead th{color:var(--mu);font-weight:500}
+ul{padding-left:20px;margin:8px 0}li{margin:8px 0}
+.q{padding:12px 0;border-top:1px solid var(--line)}
+.q label{display:flex;gap:8px;align-items:center;padding:8px 10px;margin-top:6px;border:1px solid var(--line);border-radius:12px;cursor:pointer;background:var(--glass2)}
+.q input{accent-color:var(--mint)}
+.q label:has(input:checked){border-color:var(--blue);background:rgba(90,184,255,.18)}
+.res{font-weight:600;margin-top:10px;color:var(--mint)}
+.foot{color:var(--mu);font-size:.82rem;text-align:center;margin:14px 0 4px}
+.goal{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media(max-width:980px){
+html,body{height:auto}
+.app{display:flex;flex-direction:column;height:auto;padding:10px}
+.stage{height:62vh;min-height:380px}
+.panel{overflow:visible}
+.panes{overflow:visible}
+.card{bottom:112px}
+}
+@media(max-width:560px){.goal{grid-template-columns:1fr}.legend{display:none}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="app">
+<section class="stage" id="stage" aria-label="ฉาก 3 มิติแสดงการแปลงทางเรขาคณิต">
+<div class="hud glass"><b id="hudTitle">กิจกรรม 1: การเลื่อนขนาน</b><span>ลากเพื่อหมุนมุมกล้อง · คลิกขวาหรือใช้สองนิ้วเพื่อแพน · ลูกกลิ้งเมาส์เพื่อซูม · ลากจุดสีฟ้าเพื่อเปลี่ยนรูป · กดจุดที่มีตัวอักษรเพื่อดูคำอธิบาย</span></div>
+<div class="legend glass"><span><i style="background:var(--blue)"></i>รูปต้นแบบ</span><span><i style="background:var(--orange)"></i>รูปภาพ</span><span><i style="background:var(--mint)"></i>ตัวช่วย</span></div>
+<div id="hotspots"></div>
+<div class="card glass" id="card" role="dialog" aria-live="polite"><button class="x" id="cardX" type="button" aria-label="ปิดการ์ด">×</button><div class="in" id="cardIn"></div></div>
+<div id="fingerDot" hidden></div>
+<div class="toolbar glass">
+<button class="btn" id="zIn" type="button">ซูมเข้า ＋</button>
+<button class="btn" id="zOut" type="button">ซูมออก −</button>
+<button class="btn" id="topView" type="button">มุมมองด้านบน</button>
+<button class="btn" id="homeView" type="button">จัดมุมมองใหม่</button>
+<button class="btn" id="autoRot" type="button" aria-pressed="false">หมุนอัตโนมัติ</button>
+<button class="btn primary" id="play" type="button">▶ เล่นภาพเคลื่อนไหว</button>
+</div>
+</section>
+<aside class="panel glass">
+<div><h1>📐 ห้องทดลองการแปลงทางเรขาคณิต 3 มิติ</h1><p class="sub">คณิตศาสตร์ ม.2 · เลื่อนขนาน สะท้อน หมุน ระบุจตุภาค</p></div>
+<div class="nav glass" role="tablist">
+<button class="on" data-pane="lab">ทดลอง</button><button data-pane="sum">สรุปความรู้</button><button data-pane="teach">โจทย์ครู</button><button data-pane="quiz">แบบทดสอบ</button>
+</div>
+<div class="box" id="problemBanner" hidden style="margin:0"><b>📌 โจทย์จากครู</b><p id="bannerText" style="white-space:pre-wrap;margin:6px 0 0"></p></div>
+<div class="panes">
+<div class="pane on" id="pane-lab">
+<div class="seg" role="tablist" aria-label="เลือกการแปลง">
+<button class="on" data-mode="translate">1. เลื่อนขนาน</button><button data-mode="reflect">2. สะท้อน</button><button data-mode="rotate">3. หมุน</button>
+</div>
+<div class="box">
+<h3 style="margin-top:0">🎚️ ปรับตัวแปร</h3>
+<p class="mu" style="margin:0 0 4px;font-size:.88rem">กรอกค่า x และ y ได้ตามต้องการ ไม่จำกัดที่ −5 ถึง 5</p>
+<div class="fld" id="control1"><label for="v1"><span>เลื่อนตามแกน x</span><output class="val" id="val1">3</output></label><input id="v1" type="number" value="3" step="1" inputmode="numeric"></div>
+<div class="fld" id="control2"><label for="v2"><span>เลื่อนตามแกน y</span><output class="val" id="val2">2</output></label><input id="v2" type="number" value="2" step="1" inputmode="numeric"></div>
+<div class="fld" id="control3" hidden><label for="v3"><span>มุมหมุน (ทวนเข็มนาฬิกา)</span><output class="val" id="val3">90°</output></label><input id="v3" type="range" min="0" max="360" value="90" step="15"></div>
+<div class="fld" id="axisControl" hidden><label for="axis"><span>แกนสะท้อน</span></label><select id="axis"><option value="x">แกน x (แกนนอน)</option><option value="y">แกน y (แกนตั้ง)</option><option value="diag">เส้น y = x</option></select></div>
+<div class="fld"><label for="vertexCount"><span>จำนวนคู่อันดับ (จุดยอด)</span></label><select id="vertexCount"><option value="1">1 จุด (1 คู่อันดับ)</option><option value="2">2 จุด (2 คู่อันดับ)</option><option value="3" selected>3 จุด (สามเหลี่ยม)</option><option value="4">4 จุด (สี่เหลี่ยม)</option><option value="5">5 จุด</option><option value="6">6 จุด</option><option value="7">7 จุด</option><option value="8">8 จุด</option></select></div>
+<div class="row"><button class="btn primary" id="reset" type="button">คืนค่าตัวแปร</button><button class="btn" id="resetShape" type="button">คืนรูปต้นแบบเดิม</button></div>
+</div>
+<div class="box"><h3 style="margin-top:0">🔍 กฎการแปลง</h3><div id="rule" class="formula"></div><div id="observation"></div></div>
+<div class="box">
+<h3 style="margin-top:0">🖐️ ควบคุมด้วย MediaPipe</h3>
+<p class="mu" style="margin:0;font-size:.88rem">ใช้ปลายนิ้วชี้ผ่านเว็บแคมเพื่อเลือกและลากจุดสีฟ้าในฉาก 3 มิติ</p>
+<div class="row"><button class="btn primary" id="cameraStart" type="button">เปิดกล้องและเริ่มใช้งาน</button><button class="btn" id="cameraStop" type="button" disabled>ปิดกล้อง</button></div>
+<div id="cameraStatus" class="status" role="status" aria-live="polite" data-s="idle">สถานะ: ยังไม่ได้เปิดกล้อง</div>
+<video id="cameraPreview" autoplay playsinline muted hidden></video>
+<p class="mu" style="font-size:.85rem;margin:8px 0 0">วิธีใช้: เลื่อนจุดสีม่วงไปใกล้จุดสีฟ้า แล้วหนีบนิ้วชี้กับนิ้วโป้งค้างไว้เพื่อจับและลาก ปล่อยนิ้วเพื่อวางจุดลงบนช่องตารางใกล้ที่สุด</p>
+</div>
+<h3>📍 ตารางคู่อันดับ (<span id="pairCount">3</span> คู่)</h3>
+<div class="tw"><table><thead><tr><th>จุด</th><th>พิกัดเดิม (x, y)</th><th>พิกัดภาพ (x′, y′)</th><th>จตุภาค</th></tr></thead><tbody id="coordRows"></tbody></table></div>
+<div class="box"><b>ชวนคิด:</b> รูปร่างและขนาดของรูปเปลี่ยนหรือไม่? จุดแต่ละจุดเคลื่อนที่ตามกฎเดียวกันอย่างไร?</div>
+</div>
+<div class="pane" id="pane-sum">
+<h2>🎯 วัตถุประสงค์การเรียนรู้</h2>
+<div class="goal"><div class="box" style="margin:0"><b>ทดลอง</b><br>ปรับค่าการแปลงและดูรูปเปลี่ยนตำแหน่งแบบเรียลไทม์ในฉาก 3 มิติ</div><div class="box" style="margin:0"><b>สังเกตและวิเคราะห์</b><br>เปรียบเทียบพิกัดจุดเดิมกับจุดภาพ แล้วสรุปกฎของการแปลง</div></div>
+<h2 style="margin-top:18px">📘 สรุปความรู้</h2>
+<ul>
+<li><b>การเลื่อนขนาน:</b> ทุกจุดเลื่อนไปในทิศทางเดียวกันและระยะเท่ากัน (x, y) → (x + a, y + b)</li>
+<li><b>การสะท้อน:</b> จุดและจุดภาพอยู่คนละด้านของแกนสะท้อนและห่างจากแกนเท่ากัน เช่น แกน x: (x, y) → (x, −y)</li>
+<li><b>การหมุน:</b> จุดหมุนเป็นจุดคงที่ ระยะจากจุดหมุนถึงจุดเดิมและจุดภาพเท่ากัน การหมุนรอบจุดกำเนิดทวนเข็มนาฬิกา 90°: (x, y) → (−y, x)</li>
+<li>การแปลงทั้งสามแบบรักษารูปร่างและขนาดของรูปไว้ แต่ตำแหน่งหรือทิศทางอาจเปลี่ยน</li>
+</ul>
+</div>
+<div class="pane" id="pane-teach">
+<h2>🧑‍🏫 โหมดครู · สร้างโจทย์ของตนเอง</h2>
+<p class="mu">พิมพ์โจทย์ที่ใช้ในชั้นเรียน แล้วแสดงให้นักเรียนอ่านและทดลองในฉาก 3 มิติได้ทันที</p>
+<div class="fld"><label for="teacherProblem">โจทย์ / คำถามสำหรับนักเรียน</label><textarea id="teacherProblem" rows="4" placeholder="เช่น สามเหลี่ยม ABC มีจุด A(1,1), B(4,1), C(2,3) จงเลื่อนขนานไปทางขวา 3 หน่วย และขึ้น 2 หน่วย แล้วบอกพิกัดภาพ"></textarea></div>
+<div class="row"><button class="btn primary" type="button" id="showTeacherProblem">แสดงโจทย์ให้นักเรียน</button><button class="btn" type="button" id="clearTeacherProblem">ล้างโจทย์</button><button class="btn" type="button" id="printTeacherProblem">พิมพ์โจทย์</button></div>
+<p class="mu" style="font-size:.88rem">เคล็ดลับ: โจทย์จะปักอยู่ด้านบนของแผงควบคุมทุกแท็บ ครูเปลี่ยนโหมดการแปลงและค่าตัวแปรในแท็บทดลองได้ตามโจทย์</p>
+</div>
+<div class="pane" id="pane-quiz">
+<h2>📝 แบบทดสอบท้ายกิจกรรม (3 ข้อ)</h2>
+<p class="mu">เลือกคำตอบครบแล้วกดตรวจคำตอบเพื่อดูคะแนนและเฉลย</p>
+<form id="quiz">
+<div class="q"><b>1. จุด P(2, −1) เลื่อนขนานด้วยเวกเตอร์ (3, 4) จะได้ P′ เท่าใด?</b>
+<label><input type="radio" name="q1" value="a"> (5, 3)</label><label><input type="radio" name="q1" value="b"> (−1, 3)</label><label><input type="radio" name="q1" value="c"> (6, −4)</label></div>
+<div class="q"><b>2. สะท้อนจุด Q(−3, 2) ในแกน x จะได้พิกัดใด?</b>
+<label><input type="radio" name="q2" value="a"> (3, 2)</label><label><input type="radio" name="q2" value="b"> (−3, −2)</label><label><input type="radio" name="q2" value="c"> (3, −2)</label></div>
+<div class="q"><b>3. หมุนจุด R(2, 1) รอบจุดกำเนิดทวนเข็มนาฬิกา 90° จะได้พิกัดใด?</b>
+<label><input type="radio" name="q3" value="a"> (1, −2)</label><label><input type="radio" name="q3" value="b"> (−1, 2)</label><label><input type="radio" name="q3" value="c"> (−2, 1)</label></div>
+<div class="row"><button class="btn primary" type="submit">ตรวจคำตอบ</button><button class="btn" type="button" id="answersBtn">แสดงเฉลย</button></div>
+<div class="res" id="quizResult" aria-live="polite"></div>
+<div id="answers" class="box" hidden><b>เฉลยพร้อมวิธีคิด</b><ol><li>ตอบ ก. (5, 3): บวกพิกัดด้วย (3, 4) ได้ (2+3, −1+4) = (5, 3)</li><li>ตอบ ข. (−3, −2): สะท้อนในแกน x เปลี่ยนเครื่องหมายพิกัด y</li><li>ตอบ ข. (−1, 2): หมุนทวนเข็มนาฬิกา 90° ใช้กฎ (x, y) → (−y, x)</li></ol></div>
+</form>
+</div>
+<p class="foot">ต้องเชื่อมต่ออินเทอร์เน็ตเพื่อโหลด Three.js และ MediaPipe · ใช้ได้บนคอมพิวเตอร์และแท็บเล็ต</p>
+</div>
+</aside>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script>
+const $=id=>document.getElementById(id);
+const stage=$('stage'),v1=$('v1'),v2=$('v2'),v3=$('v3'),axisSel=$('axis');
+const COL={orig:0x5ab8ff,img:0xff9d57,ghost:0x6fe3c1};
+const NAMES=['A','B','C','D','E','F','G','H'];
+const TITLES={translate:'กิจกรรม 1: การเลื่อนขนาน',reflect:'กิจกรรม 2: การสะท้อน',rotate:'กิจกรรม 3: การหมุน'};
+const UP=new THREE.Vector3(0,1,0);
+const V=(x,y,z)=>new THREE.Vector3(x,y,z);
+const nice=n=>Math.abs(n)<1e-8?0:Math.round(n*100)/100;
+const fmt=p=>'('+nice(p.x)+', '+nice(p.y)+')';
+const clamp=n=>Math.max(-9,Math.min(9,n));
+let mode='translate',dragging=null,anim=null,tween=null,hots=[],activeHot=null;
+const pickables=[];
+
+function makeShape(n){
+ if(n===1)return [{n:'A',x:1,y:1}];
+ if(n===2)return [{n:'A',x:-2,y:1},{n:'B',x:3,y:2}];
+ if(n===3)return [{n:'A',x:1,y:1},{n:'B',x:4,y:1},{n:'C',x:2,y:3}];
+ const make=r=>Array.from({length:n},(_,i)=>{const a=-Math.PI/2+i*2*Math.PI/n;return{n:NAMES[i],x:Math.round(3*Math.cos(a)*r)/r,y:Math.round(2.6*Math.sin(a)*r)/r}});
+ const s=make(1);
+ return new Set(s.map(p=>p.x+','+p.y)).size===n?s:make(10);
+}
+let original=makeShape(3);
+
+function transform(p){
+ const x=p.x,y=p.y;
+ if(mode==='translate')return{x:x+ +v1.value,y:y+ +v2.value};
+ if(mode==='reflect'){const a=axisSel.value;return a==='x'?{x,y:-y}:a==='y'?{x:-x,y}:{x:y,y:x}}
+ const t=+v3.value*Math.PI/180;
+ return{x:x*Math.cos(t)-y*Math.sin(t),y:x*Math.sin(t)+y*Math.cos(t)};
+}
+function quad(p){const x=nice(p.x),y=nice(p.y);if(!x&&!y)return 'O';if(!x||!y)return 'แกน';return x>0?(y>0?'1':'4'):(y>0?'2':'3')}
+function quadName(p){const q=quad(p);return q==='O'?'ที่จุดกำเนิด':q==='แกน'?'บนแกนพิกัด':'ในจตุภาคที่ '+q}
+function how(p){
+ const q=transform(p);
+ if(mode==='translate')return `(${p.x} + ${v1.value}, ${p.y} + ${v2.value}) = ${fmt(q)}`;
+ if(mode==='reflect'){const a=axisSel.value;return a==='x'?`(x, −y) = (${p.x}, ${nice(-p.y)})`:a==='y'?`(−x, y) = (${nice(-p.x)}, ${p.y})`:`(y, x) = (${p.y}, ${p.x})`}
+ return `x′ = ${p.x}·cos${v3.value}° − ${p.y}·sin${v3.value}°<br>y′ = ${p.x}·sin${v3.value}° + ${p.y}·cos${v3.value}°<br>= ${fmt(q)}`;
+}
+
+const renderer=new THREE.WebGLRenderer({antialias:true,alpha:true});
+renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+renderer.shadowMap.enabled=true;
+renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+renderer.toneMapping=THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure=1.05;
+renderer.outputEncoding=THREE.sRGBEncoding;
+const dom=renderer.domElement;
+stage.prepend(dom);
+const scene=new THREE.Scene();
+const camera=new THREE.PerspectiveCamera(42,1,.1,200);
+camera.up.set(0,0,1);
+const HOME={p:V(10,-14,11),t:V(0,0,.3)},TOP={p:V(0,-3,24),t:V(0,0,0)};
+camera.position.copy(HOME.p);
+
+scene.add(new THREE.HemisphereLight(0xcfe6ff,0x1a2440,.85));
+const sun=new THREE.DirectionalLight(0xffffff,1.15);
+sun.position.set(6,-8,14);
+sun.castShadow=true;
+sun.shadow.mapSize.set(2048,2048);
+Object.assign(sun.shadow.camera,{left:-15,right:15,top:15,bottom:-15,near:1,far:50});
+sun.shadow.bias=-.0004;
+scene.add(sun);
+const rim=new THREE.PointLight(0xff9d57,.6,40);
+rim.position.set(-9,8,6);
+scene.add(rim);
+
+const pickRay=new THREE.Raycaster(),ndc=new THREE.Vector2(),plane0=new THREE.Plane(V(0,0,1),-.3);
+function setNdc(cx,cy){const r=dom.getBoundingClientRect();ndc.set((cx-r.left)/r.width*2-1,-((cy-r.top)/r.height)*2+1);pickRay.setFromCamera(ndc,camera)}
+function hitPlane(){const o=V(0,0,0);return pickRay.ray.intersectPlane(plane0,o)?o:null}
+dom.addEventListener('pointerdown',e=>{
+ setNdc(e.clientX,e.clientY);
+ const hit=pickRay.intersectObjects(pickables,false)[0];
+ if(hit){dragging=hit.object.userData.pt;controls.enabled=false;dom.setPointerCapture(e.pointerId);dom.style.cursor='grabbing'}
+});
+dom.addEventListener('pointermove',e=>{
+ setNdc(e.clientX,e.clientY);
+ if(dragging){
+  const w=hitPlane();
+  if(w){const nx=clamp(Math.round(w.x)),ny=clamp(Math.round(w.y));if(nx!==dragging.x||ny!==dragging.y){dragging.x=nx;dragging.y=ny;rebuild()}}
+  return;
+ }
+ dom.style.cursor=pickRay.intersectObjects(pickables,false).length?'grab':'';
+});
+function endDrag(){if(dragging){dragging=null;controls.enabled=true;dom.style.cursor=''}}
+dom.addEventListener('pointerup',endDrag);
+dom.addEventListener('pointercancel',endDrag);
+
+const controls=new THREE.OrbitControls(camera,dom);
+controls.enableDamping=true;
+controls.dampingFactor=.08;
+controls.minDistance=5;
+controls.maxDistance=45;
+controls.maxPolarAngle=Math.PI/2-.03;
+controls.autoRotateSpeed=1.6;
+controls.target.copy(HOME.t);
+
+function resize(){
+ const w=stage.clientWidth,h=stage.clientHeight;
+ if(!w||!h)return;
+ renderer.setSize(w,h,false);
+ camera.aspect=w/h;
+ camera.updateProjectionMatrix();
+}
+new ResizeObserver(resize).observe(stage);
+resize();
+
+function clearGroup(g){
+ while(g.children.length){
+  const o=g.children.pop();
+  if(o.children&&o.children.length)clearGroup(o);
+  if(o.geometry)o.geometry.dispose();
+  if(o.material)o.material.dispose();
+ }
+}
+function bar(a,b,r,mat){
+ const d=V(0,0,0).subVectors(b,a),len=d.length();
+ if(len<1e-6)return new THREE.Object3D();
+ const m=new THREE.Mesh(new THREE.CylinderGeometry(r,r,len,10),mat);
+ m.position.copy(a).addScaledVector(d,.5);
+ m.quaternion.setFromUnitVectors(UP,d.normalize());
+ m.castShadow=true;
+ return m;
+}
+function link(a,b,r,mat,arrow){
+ const g=new THREE.Group();
+ g.add(bar(a,b,r,mat));
+ const d=V(0,0,0).subVectors(b,a),L=d.length();
+ if(arrow&&L>.6){
+  d.normalize();
+  const c=new THREE.Mesh(new THREE.ConeGeometry(.11,.34,12),mat);
+  c.quaternion.setFromUnitVectors(UP,d);
+  c.position.copy(b).addScaledVector(d,-.2);
+  g.add(c);
+ }
+ return g;
+}
+function sprite(text,color,px,w,h,sx,sy){
+ const c=document.createElement('canvas');
+ c.width=w;c.height=h;
+ const g=c.getContext('2d');
+ g.font='600 '+px+'px "IBM Plex Sans Thai",Tahoma,sans-serif';
+ g.textAlign='center';g.textBaseline='middle';g.fillStyle=color;
+ g.fillText(text,w/2,h/2);
+ const t=new THREE.CanvasTexture(c);
+ t.encoding=THREE.sRGBEncoding;
+ const s=new THREE.Sprite(new THREE.SpriteMaterial({map:t,transparent:true,depthWrite:false,toneMapped:false}));
+ s.scale.set(sx,sy,1);
+ return s;
+}
+function buildStatic(){
+ const floor=new THREE.Mesh(new THREE.PlaneGeometry(22,22),new THREE.MeshStandardMaterial({color:0x182744,roughness:.85,metalness:.05,transparent:true,opacity:.92}));
+ floor.position.z=-.01;
+ floor.receiveShadow=true;
+ scene.add(floor);
+ const grid=new THREE.GridHelper(20,20,0x4d6ca3,0x2e4570);
+ grid.rotation.x=Math.PI/2;
+ grid.position.z=.002;
+ scene.add(grid);
+ const axM=c=>new THREE.MeshBasicMaterial({color:c});
+ const xm=axM(0xff8a9b),ym=axM(0x6fe3c1);
+ scene.add(bar(V(-10.5,0,.03),V(10.5,0,.03),.04,xm));
+ scene.add(bar(V(0,-10.5,.03),V(0,10.5,.03),.04,ym));
+ const hx=new THREE.Mesh(new THREE.ConeGeometry(.16,.5,14),xm);
+ hx.rotation.z=-Math.PI/2;hx.position.set(10.7,0,.03);scene.add(hx);
+ const hy=new THREE.Mesh(new THREE.ConeGeometry(.16,.5,14),ym);
+ hy.position.set(0,10.7,.03);scene.add(hy);
+ const lx=sprite('x','#ff8a9b',72,96,96,.9,.9);lx.position.set(11.5,0,.05);scene.add(lx);
+ const ly=sprite('y','#6fe3c1',72,96,96,.9,.9);ly.position.set(0,11.5,.05);scene.add(ly);
+ for(let i=-9;i<=9;i++){
+  if(!i)continue;
+  const a=sprite(String(i),'#a9bde0',64,96,96,.7,.7);a.position.set(i,-.62,.05);scene.add(a);
+  const b=sprite(String(i),'#a9bde0',64,96,96,.7,.7);b.position.set(-.62,i,.05);scene.add(b);
+ }
+ const o=sprite('O','#ffffff',64,96,96,.8,.8);o.position.set(-.55,-.55,.05);scene.add(o);
+ const dot=new THREE.Mesh(new THREE.SphereGeometry(.1,16,12),axM(0xffffff));
+ scene.add(dot);
+ [[1,1,'จตุภาคที่ 1 (+, +)'],[-1,1,'จตุภาคที่ 2 (−, +)'],[-1,-1,'จตุภาคที่ 3 (−, −)'],[1,-1,'จตุภาคที่ 4 (+, −)']].forEach(q=>{
+  const s=sprite(q[2],'rgba(190,212,255,.5)',44,512,96,5,.94);
+  s.position.set(q[0]*6.2,q[1]*6.2,.05);
+  scene.add(s);
+ });
+}
+
+const dyn=new THREE.Group(),ghost=new THREE.Group();
+scene.add(dyn,ghost);
+
+function buildShape(pts,color,pick){
+ const g=new THREE.Group(),H=.3,n=pts.length;
+ const mat=new THREE.MeshStandardMaterial({color,roughness:.35,metalness:.15,transparent:true,opacity:.9});
+ const edge=new THREE.MeshStandardMaterial({color,roughness:.25,metalness:.3,emissive:color,emissiveIntensity:.35});
+ if(n>=3){
+  const sh=new THREE.Shape(pts.map(p=>new THREE.Vector2(p.x,p.y)));
+  const m=new THREE.Mesh(new THREE.ExtrudeGeometry(sh,{depth:H,bevelEnabled:false}),mat);
+  m.castShadow=true;m.receiveShadow=true;
+  g.add(m);
+ }
+ for(let i=0;i<(n>=3?n:n-1);i++)g.add(bar(V(pts[i].x,pts[i].y,H),V(pts[(i+1)%n].x,pts[(i+1)%n].y,H),.045,edge));
+ pts.forEach(p=>{
+  const s=new THREE.Mesh(new THREE.SphereGeometry(.17,24,16),edge);
+  s.position.set(p.x,p.y,H);s.castShadow=true;
+  g.add(s);
+  if(pick){
+   const h=new THREE.Mesh(new THREE.SphereGeometry(.5,8,6),new THREE.MeshBasicMaterial({visible:false}));
+   h.position.copy(s.position);h.userData.pt=p;
+   g.add(h);pickables.push(h);
+  }
+ });
+ return g;
+}
+
+function rebuild(){
+ clearGroup(dyn);
+ pickables.length=0;
+ const img=original.map(p=>transform(p));
+ dyn.add(buildShape(original,COL.orig,true));
+ dyn.add(buildShape(img,COL.img,false));
+ const lm=new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:.5});
+ original.forEach((p,i)=>{
+  if(mode==='rotate'){
+   dyn.add(link(V(0,0,.05),V(p.x,p.y,.05),.012,lm,false));
+   dyn.add(link(V(0,0,.05),V(img[i].x,img[i].y,.05),.012,lm,false));
+  }else dyn.add(link(V(p.x,p.y,.3),V(img[i].x,img[i].y,.3),.016,lm,true));
+ });
+ if(mode==='reflect'){
+  const ang={x:0,y:Math.PI/2,diag:Math.PI/4}[axisSel.value],c=Math.cos(ang),s=Math.sin(ang);
+  const pl=new THREE.Mesh(new THREE.PlaneGeometry(24,4.5).rotateX(Math.PI/2),new THREE.MeshBasicMaterial({color:COL.ghost,transparent:true,opacity:.14,side:THREE.DoubleSide,depthWrite:false}));
+  pl.position.z=2.25;pl.rotation.z=ang;
+  dyn.add(pl);
+  dyn.add(bar(V(-11*c,-11*s,.05),V(11*c,11*s,.05),.055,new THREE.MeshBasicMaterial({color:COL.ghost})));
+ }
+ if(mode==='rotate'&&+v3.value>0){
+  const sec=new THREE.Mesh(new THREE.CircleGeometry(1.6,64,0,+v3.value*Math.PI/180),new THREE.MeshBasicMaterial({color:COL.ghost,transparent:true,opacity:.32,side:THREE.DoubleSide,depthWrite:false}));
+  sec.position.z=.04;
+  dyn.add(sec);
+ }
+ updateUI(img);
+ buildHotspots(img);
+}
+
+function updateUI(img){
+ $('hudTitle').textContent=TITLES[mode];
+ $('pairCount').textContent=original.length;
+ $('coordRows').innerHTML=original.map((p,i)=>`<tr><th>${p.n}</th><td>${fmt(p)}</td><td>${fmt(img[i])}</td><td>${quad(p)} → ${quad(img[i])}</td></tr>`).join('');
+ $('val1').textContent=v1.value;$('val2').textContent=v2.value;$('val3').textContent=v3.value+'°';
+ const rule=$('rule'),obs=$('observation');
+ if(mode==='translate'){rule.textContent=`(x, y) → (x + ${v1.value}, y + ${v2.value})`;obs.textContent=`ทุกจุดเลื่อน ${v1.value} หน่วยตามแกน x และ ${v2.value} หน่วยตามแกน y โดยรูปร่างและขนาดคงเดิม`}
+ else if(mode==='reflect'){const a=axisSel.value;rule.textContent=a==='x'?'(x, y) → (x, −y)':a==='y'?'(x, y) → (−x, y)':'(x, y) → (y, x)';obs.textContent='จุดภาพอยู่สมมาตรกับจุดเดิมเมื่อเทียบกับ'+(a==='x'?'แกน x':a==='y'?'แกน y':'เส้น y = x')+' และมีระยะตั้งฉากจากแกนเท่ากัน'}
+ else{rule.textContent=`หมุนทวนเข็มนาฬิกา ${v3.value}° รอบ O`;obs.textContent='จุดหมุน O คงที่ ระยะจาก O ถึงจุดเดิมเท่ากับระยะจาก O ถึงจุดภาพ'}
+}
+
+function buildHotspots(img){
+ const box=$('hotspots');
+ box.innerHTML='';hots=[];
+ const add=(key,label,cls,pos,html)=>{
+  const el=document.createElement('button');
+  el.type='button';el.className='hot '+cls;el.textContent=label;
+  el.setAttribute('aria-label','ดูคำอธิบาย '+label);
+  el.addEventListener('click',()=>showCard(key,true));
+  box.appendChild(el);
+  hots.push({key,el,pos,html,cls});
+ };
+ original.forEach((p,i)=>{
+  const q=img[i];
+  const body=`<div class="kv"><span>จุดเดิม ${p.n}</span><b>${fmt(p)}</b></div><div class="kv"><span>จุดภาพ ${p.n}′</span><b>${fmt(q)}</b></div><p>${how(p)}</p><p class="mu">${p.n} อยู่${quadName(p)} · ${p.n}′ อยู่${quadName(q)}</p>`;
+  add('p'+i,p.n,'o',V(p.x,p.y,.95),`<h4>จุดเดิม ${p.n} → ${p.n}′</h4>`+body);
+  add('q'+i,p.n+'′','i',V(q.x,q.y,.95),`<h4>จุดภาพ ${p.n}′ (มาจากจุด ${p.n})</h4>`+body);
+ });
+ if(mode==='rotate')add('O','O','k',V(0,0,.75),'<h4>จุดหมุน O(0, 0)</h4><p>จุดหมุนเป็นจุดคงที่ ระยะจาก O ถึงจุดเดิมและจุดภาพเท่ากันเสมอ</p>');
+ else add('O','O','k',V(0,0,.75),'<h4>จุดกำเนิด O(0, 0)</h4><p>จุดตัดของแกน x และแกน y แบ่งระนาบพิกัดเป็น 4 จตุภาค: จตุภาคที่ 1 (+, +) · 2 (−, +) · 3 (−, −) · 4 (+, −)</p>');
+ if(mode==='translate'&&original.length){
+  const p=original[0],q=img[0];
+  add('vec','→','k',V((p.x+q.x)/2,(p.y+q.y)/2,1),`<h4>เวกเตอร์การเลื่อน (${v1.value}, ${v2.value})</h4><p>ทุกจุดเลื่อนตามแกน x จำนวน ${v1.value} หน่วย และตามแกน y จำนวน ${v2.value} หน่วยเท่ากัน ลูกศรสีขาวชี้จากจุดเดิมไปยังจุดภาพ</p>`);
+ }
+ if(mode==='reflect'){
+  const a=axisSel.value,u=a==='x'?[1,0]:a==='y'?[0,1]:[.7071,.7071],nm=a==='x'?'แกน x':a==='y'?'แกน y':'เส้น y = x';
+  add('ax','แกน','k',V(u[0]*7,u[1]*7,2.6),`<h4>แกนสะท้อน: ${nm}</h4><p>แผ่นโปร่งแสงสีเขียวคือกระจก จุดเดิมและจุดภาพอยู่คนละด้านและห่างจาก${nm}เท่ากัน กด "เล่นภาพเคลื่อนไหว" เพื่อดูรูปพลิกข้ามกระจก</p>`);
+ }
+ if(mode==='rotate'&&+v3.value>0){
+  const a=+v3.value*Math.PI/360;
+  add('ang',v3.value+'°','k',V(1.9*Math.cos(a),1.9*Math.sin(a),.6),`<h4>มุมหมุน ${v3.value}°</h4><p>หมุนทวนเข็มนาฬิการอบจุด O ทุกจุดหมุนด้วยมุมเดียวกัน พื้นที่สีเขียวคือมุมที่หมุนไป</p>`);
+ }
+ if(activeHot)showCard(activeHot,false);
+}
+
+function showCard(key,animate){
+ const h=hots.find(o=>o.key===key),card=$('card');
+ if(!h){card.classList.remove('show');activeHot=null;return}
+ activeHot=key;
+ const inner=$('cardIn');
+ inner.innerHTML=h.html;
+ if(animate){inner.style.animation='none';inner.offsetWidth;inner.style.animation=''}
+ card.style.borderLeftColor=h.cls==='o'?'#5ab8ff':h.cls==='i'?'#ff9d57':'#6fe3c1';
+ card.classList.add('show');
+ hots.forEach(o=>o.el.classList.toggle('on',o.key===key));
+}
+$('cardX').addEventListener('click',()=>{$('card').classList.remove('show');activeHot=null;hots.forEach(o=>o.el.classList.remove('on'))});
+
+const tmp=V(0,0,0);
+function placeHots(){
+ const w=stage.clientWidth,h=stage.clientHeight;
+ hots.forEach(o=>{
+  tmp.copy(o.pos).project(camera);
+  o.el.style.visibility=tmp.z<1&&tmp.z>-1?'visible':'hidden';
+  o.el.style.transform=`translate(${(tmp.x*.5+.5)*w}px,${(-tmp.y*.5+.5)*h}px) translate(-50%,-50%)`;
+ });
+}
+function toScreen(v){const q=v.clone().project(camera);return{x:(q.x*.5+.5)*stage.clientWidth,y:(-q.y*.5+.5)*stage.clientHeight}}
+
+function ghostPos(p,t){
+ const s=Math.sin(Math.PI*t);
+ if(mode==='translate')return V(p.x+t*v1.value,p.y+t*v2.value,.3+s*.9);
+ if(mode==='rotate'){const a=t*v3.value*Math.PI/180,c=Math.cos(a),n=Math.sin(a);return V(p.x*c-p.y*n,p.x*n+p.y*c,.3+s*.9)}
+ const u={x:[1,0],y:[0,1],diag:[Math.SQRT1_2,Math.SQRT1_2]}[axisSel.value];
+ const dp=p.x*u[0]+p.y*u[1],fx=dp*u[0],fy=dp*u[1],dx=p.x-fx,dy=p.y-fy,L=Math.hypot(dx,dy),c=Math.cos(Math.PI*t);
+ return V(fx+dx*c,fy+dy*c,.3+L*s);
+}
+function updateGhost(now){
+ if(!anim&&!ghost.children.length)return;
+ clearGroup(ghost);
+ if(!anim)return;
+ const k=(now-anim.s)/anim.d;
+ if(k>=1){anim=null;$('play').disabled=false;return}
+ const e=k<.5?2*k*k:1-Math.pow(2-2*k,2)/2,pts=original.map(p=>ghostPos(p,e)),n=pts.length;
+ pts.forEach(p=>{const s=new THREE.Mesh(new THREE.SphereGeometry(.16,16,12),new THREE.MeshBasicMaterial({color:COL.ghost}));s.position.copy(p);ghost.add(s)});
+ for(let i=0;i<(n>=3?n:n-1);i++)ghost.add(bar(pts[i],pts[(i+1)%n],.04,new THREE.MeshBasicMaterial({color:COL.ghost})));
+ if(n>=3){
+  const pos=[];
+  for(let i=1;i<n-1;i++)pos.push(pts[0].x,pts[0].y,pts[0].z,pts[i].x,pts[i].y,pts[i].z,pts[i+1].x,pts[i+1].y,pts[i+1].z);
+  const g=new THREE.BufferGeometry();
+  g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));
+  ghost.add(new THREE.Mesh(g,new THREE.MeshBasicMaterial({color:COL.ghost,transparent:true,opacity:.35,side:THREE.DoubleSide,depthWrite:false})));
+ }
+}
+$('play').addEventListener('click',()=>{anim={s:performance.now(),d:2600};$('play').disabled=true});
+
+function flyTo(v){tween={s:performance.now(),p0:camera.position.clone(),t0:controls.target.clone(),p1:v.p.clone(),t1:v.t.clone()}}
+function zoom(f){
+ const d=camera.position.clone().sub(controls.target).multiplyScalar(f),L=d.length();
+ if(L<controls.minDistance||L>controls.maxDistance)return;
+ camera.position.copy(controls.target).add(d);
+}
+$('zIn').addEventListener('click',()=>zoom(.8));
+$('zOut').addEventListener('click',()=>zoom(1.25));
+$('topView').addEventListener('click',()=>flyTo(TOP));
+$('homeView').addEventListener('click',()=>flyTo(HOME));
+$('autoRot').addEventListener('click',e=>{controls.autoRotate=!controls.autoRotate;e.currentTarget.setAttribute('aria-pressed',controls.autoRotate)});
+
+function loop(now){
+ requestAnimationFrame(loop);
+ if(tween){
+  const k=Math.min(1,(now-tween.s)/700),e=1-Math.pow(1-k,3);
+  camera.position.lerpVectors(tween.p0,tween.p1,e);
+  controls.target.lerpVectors(tween.t0,tween.t1,e);
+  if(k>=1)tween=null;
+ }
+ controls.update();
+ updateGhost(now);
+ placeHots();
+ renderer.render(scene,camera);
+}
+requestAnimationFrame(loop);
+
+function setMode(m){
+ mode=m;
+ document.querySelectorAll('[data-mode]').forEach(b=>b.classList.toggle('on',b.dataset.mode===m));
+ $('control1').hidden=m!=='translate';$('control2').hidden=m!=='translate';
+ $('axisControl').hidden=m!=='reflect';$('control3').hidden=m!=='rotate';
+ anim=null;$('play').disabled=false;
+ rebuild();
+}
+document.querySelectorAll('[data-mode]').forEach(b=>b.addEventListener('click',()=>setMode(b.dataset.mode)));
+[v1,v2,v3,axisSel].forEach(el=>el.addEventListener('input',rebuild));
+$('reset').addEventListener('click',()=>{v1.value=3;v2.value=2;v3.value=90;axisSel.value='x';rebuild()});
+$('vertexCount').addEventListener('change',e=>{original=makeShape(+e.target.value);rebuild()});
+$('resetShape').addEventListener('click',()=>{original=makeShape(+$('vertexCount').value);rebuild()});
+document.querySelectorAll('[data-pane]').forEach(b=>b.addEventListener('click',()=>{
+ document.querySelectorAll('[data-pane]').forEach(x=>x.classList.toggle('on',x===b));
+ document.querySelectorAll('.pane').forEach(p=>p.classList.toggle('on',p.id==='pane-'+b.dataset.pane));
+}));
+
+$('showTeacherProblem').addEventListener('click',()=>{
+ const t=$('teacherProblem').value.trim();
+ if(!t){$('teacherProblem').focus();return}
+ $('bannerText').textContent=t;
+ $('problemBanner').hidden=false;
+});
+$('clearTeacherProblem').addEventListener('click',()=>{$('teacherProblem').value='';$('problemBanner').hidden=true});
+$('printTeacherProblem').addEventListener('click',()=>{
+ const t=$('teacherProblem').value.trim();
+ if(!t){$('teacherProblem').focus();return}
+ const w=window.open('','_blank','width=800,height=600');
+ if(!w)return;
+ w.document.write('<!doctype html><html lang="th"><meta charset="utf-8"><title>โจทย์การแปลงทางเรขาคณิต</title><style>body{font-family:Tahoma,sans-serif;padding:36px;line-height:1.8;color:#222}h1{font-size:24px}p{white-space:pre-wrap;font-size:18px}</style><h1>โจทย์การแปลงทางเรขาคณิต · ม.2</h1><p></p></html>');
+ w.document.querySelector('p').textContent=t;
+ w.document.close();w.focus();w.print();
+});
+$('quiz').addEventListener('submit',e=>{
+ e.preventDefault();
+ const key={q1:'a',q2:'b',q3:'b'};
+ let score=0,missing=0;
+ for(const q in key){
+  const c=document.querySelector('input[name="'+q+'"]:checked');
+  if(!c)missing++;else if(c.value===key[q])score++;
+ }
+ $('quizResult').textContent=`คะแนน ${score}/3`+(missing?` · ยังไม่ได้ตอบ ${missing} ข้อ`:' · ตรวจเฉลยเพื่อทบทวนได้เลย');
+ $('answers').hidden=false;
+});
+$('answersBtn').addEventListener('click',()=>{$('answers').hidden=false;$('quizResult').textContent='แสดงเฉลยแล้ว'});
+
+const camBtnStart=$('cameraStart'),camBtnStop=$('cameraStop'),camVideo=$('cameraPreview'),dot=$('fingerDot');
+let hl=null,stream=null,running=false,raf=null,lastT=-1,held=null,pinchWas=false,lastF=null,lastStat=0;
+function camStatus(m,s='idle'){$('cameraStatus').textContent='สถานะ: '+m;$('cameraStatus').dataset.s=s}
+function statusSoon(m,s){const n=performance.now();if(n-lastStat>700){camStatus(m,s);lastStat=n}}
+function nearestVertex(pt,r=70){
+ let best=null,bd=r;
+ original.forEach(p=>{const s=toScreen(V(p.x,p.y,.3)),d=Math.hypot(pt.x-s.x,pt.y-s.y);if(d<bd){best=p;bd=d}});
+ return best;
+}
+function moveVertex(p,pt){
+ const r=dom.getBoundingClientRect();
+ setNdc(r.left+pt.x*r.width/stage.clientWidth,r.top+pt.y*r.height/stage.clientHeight);
+ const w=hitPlane();
+ if(!w)return;
+ const nx=clamp(Math.round(w.x)),ny=clamp(Math.round(w.y));
+ if(nx!==p.x||ny!==p.y){p.x=nx;p.y=ny;rebuild()}
+}
+function showDot(pt,pinch){dot.hidden=false;dot.classList.toggle('pinch',pinch);dot.style.transform=`translate(${pt.x}px,${pt.y}px)`}
+function processFrame(){
+ if(!running||!hl)return;
+ if(camVideo.readyState>=2&&camVideo.currentTime!==lastT){
+  lastT=camVideo.currentTime;
+  const res=hl.detectForVideo(camVideo,performance.now()),lm=res.landmarks&&res.landmarks[0];
+  if(lm&&lm[8]&&lm[4]){
+   const raw={x:(1-lm[8].x)*stage.clientWidth,y:lm[8].y*stage.clientHeight};
+   const tip=lastF?{x:lastF.x*.62+raw.x*.38,y:lastF.y*.62+raw.y*.38}:raw;
+   lastF=tip;
+   const pinching=Math.hypot(lm[8].x-lm[4].x,lm[8].y-lm[4].y)<.055;
+   if(pinching&&!pinchWas&&!held){
+    held=nearestVertex(tip);
+    if(held)camStatus('จับจุด '+held.n+' แล้ว — ขยับมือเพื่อย้ายจุด','ok');
+    else statusSoon('ยังไม่อยู่ใกล้จุดสีฟ้าพอ เลื่อนนิ้วไปใกล้จุดยอดก่อน','idle');
+   }
+   if(pinching&&held)moveVertex(held,tip);
+   if(!pinching&&pinchWas&&held){camStatus('วางจุด '+held.n+' แล้ว','ok');held=null}
+   pinchWas=pinching;
+   showDot(tip,pinching);
+   if(!held&&!pinching)statusSoon('ตรวจพบมือ — เลื่อนตัวชี้ไปใกล้จุดสีฟ้าแล้วหนีบนิ้ว','ok');
+  }else{
+   if(held)camStatus('ปล่อยจุดแล้ว เนื่องจากมือออกนอกภาพ','idle');
+   held=null;pinchWas=false;lastF=null;dot.hidden=true;
+   statusSoon('ยังไม่พบมือ — ยกมือให้อยู่ในภาพกล้อง','idle');
+  }
+ }
+ raf=requestAnimationFrame(processFrame);
+}
+async function startCamera(){
+ camBtnStart.disabled=true;
+ camStatus('กำลังโหลด MediaPipe และขออนุญาตใช้กล้อง…');
+ try{
+  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia)throw new Error('เบราว์เซอร์ไม่รองรับกล้อง โปรดเปิดผ่าน HTTPS หรือ localhost ด้วย Chrome/Edge รุ่นใหม่');
+  if(!hl){
+   const {FilesetResolver,HandLandmarker}=await import('https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14');
+   const vision=await FilesetResolver.forVisionTasks('https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/wasm');
+   const opt={baseOptions:{modelAssetPath:'https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task'},runningMode:'VIDEO',numHands:1};
+   try{hl=await HandLandmarker.createFromOptions(vision,{...opt,baseOptions:{...opt.baseOptions,delegate:'GPU'}})}
+   catch(g){hl=await HandLandmarker.createFromOptions(vision,opt)}
+  }
+  stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'user',width:{ideal:640},height:{ideal:480}},audio:false});
+  camVideo.srcObject=stream;camVideo.hidden=false;
+  await camVideo.play();
+  running=true;camBtnStop.disabled=false;
+  camStatus('กล้องพร้อมใช้งาน — ยกมือให้อยู่ในภาพ','ok');
+  processFrame();
+ }catch(err){
+  console.error(err);
+  stopCamera(true);
+  const msg=err&&err.name==='NotAllowedError'?'ไม่ได้รับอนุญาตให้ใช้กล้อง โปรดอนุญาต Camera ในเบราว์เซอร์แล้วลองใหม่':err&&err.name==='NotFoundError'?'ไม่พบเว็บแคมที่เชื่อมต่ออยู่':(err&&err.message)||'เริ่มกล้องไม่สำเร็จ';
+  camStatus(msg+' (ต้องใช้อินเทอร์เน็ตเพื่อโหลด MediaPipe)','error');
+ }
+}
+function stopCamera(silent){
+ running=false;
+ if(raf!==null)cancelAnimationFrame(raf);
+ raf=null;
+ if(stream)stream.getTracks().forEach(t=>t.stop());
+ stream=null;camVideo.srcObject=null;camVideo.hidden=true;
+ held=null;pinchWas=false;lastF=null;dot.hidden=true;
+ camBtnStart.disabled=false;camBtnStop.disabled=true;
+ if(!silent)camStatus('ปิดกล้องแล้ว');
+}
+camBtnStart.addEventListener('click',startCamera);
+camBtnStop.addEventListener('click',()=>stopCamera(false));
+window.addEventListener('beforeunload',()=>{if(stream)stream.getTracks().forEach(t=>t.stop())});
+
+rebuild();
+Promise.race([document.fonts.load('600 40px "IBM Plex Sans Thai"','จตุภาคที่'),new Promise(r=>setTimeout(r,1500))]).catch(()=>{}).then(buildStatic);
+</script>
+</body>
+</html>
